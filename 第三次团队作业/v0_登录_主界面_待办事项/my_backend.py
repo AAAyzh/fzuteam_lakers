@@ -2,6 +2,7 @@ from flask import Flask, request, jsonify, render_template
 from flask_cors import CORS
 import mysql.connector
 import my_dify_api
+import json
 # call_for_task_generate("生成分解后的任务json列表", "我们小组有6个人，要求是对马原第三章进行扩展ppt汇报")
 # call_for_greeting_summarize("总结","./test_file/video.mp3")
 # call_for_greeting_translate("总结","./test_file/video.mp3")
@@ -106,13 +107,33 @@ def auth(action):             #登录注册验证
 @app.route('/api/meeting/<action>', methods=['POST'])
 def meeting(action):
     try:
+        data = request.json
+        
         if action == 'audio-to-text':
             # TODO: 实现语音转文字逻辑
-            return standard_response(True, {'text': '语音转文字结果'})
+            
+            # 获取音频文件路径
+            audio_path = data.get('audio_path')
+            if not audio_path:
+                return standard_response(False, message='缺少音频文件路径')
+            
+            # 调用my_dify_api的语音转文字功能
+            result = my_dify_api.call_for_greeting_translate("语音转文字", audio_path)
+            
+            return standard_response(True, {'text': result})
             
         elif action == 'generate-summary':
             # TODO: 实现会议纪要生成逻辑
-            return standard_response(True, {'summary': '会议纪要内容'})
+            
+            # 获取音频文件路径
+            audio_path = data.get('audio_path')
+            if not audio_path:
+                return standard_response(False, message='缺少音频文件路径')
+            
+            # 调用my_dify_api的生成摘要功能
+            result = my_dify_api.call_for_greeting_summarize("总结", audio_path)
+            
+            return standard_response(True, {'summary': result})
             
         else:
             return standard_response(False, message='未知的操作类型')
@@ -360,13 +381,33 @@ def member_refresh():
 @app.route('/api/ai/<action>', methods=['POST'])
 def ai_functions(action):
     try:
+        data = request.json
+        
         if action == 'chat':
             # TODO: 实现AI聊天逻辑
-            return standard_response(True, {'response': 'AI回复内容'})
+            
+            # 获取用户输入
+            user_input = data.get('message')
+            if not user_input:
+                return standard_response(False, message='缺少用户输入')
+            
+            # 调用my_dify_api的聊天功能
+            result = my_dify_api.call_for_chat("快速回答", user_input)
+            
+            return standard_response(True, {'response': result})
             
         elif action == 'generate-tasks':
             # TODO: 实现任务生成逻辑
-            return standard_response(True, {'tasks': [{'name': '任务1'}]})
+            
+            # 获取用户需求
+            user_requirement = data.get('requirement')
+            if not user_requirement:
+                return standard_response(False, message='缺少任务需求')
+            
+            # 调用my_dify_api的任务生成功能
+            result = my_dify_api.call_for_task_generate("生成分解后的任务json列表", user_requirement)
+            
+            return standard_response(True, {'tasks': result})
             
         elif action == 'match-tasks':
             # TODO: 实现任务匹配逻辑
